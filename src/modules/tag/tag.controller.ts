@@ -1,37 +1,39 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from "@nestjs/common";
-import { CreateTagDto, GetTagByFilterDto, UpdateTagDto } from "./tag.dto";
 import { TagService } from "./tag.service";
+import { CreateTagDto } from "./dto/create.tag.dto";
+import { UpdateTagDto } from "./dto/update.tag.dto";
+import { GetTagByFilterDto } from "./dto/filter.tag.dto";
 
-@Controller()
+@Controller('v1/tags')
 
 export class TagController {
 
     constructor(private readonly tagService: TagService) {}
 
-    @Post('tag')
+    @Post()
     async createTag(@Body() createTag: CreateTagDto) {
         return await this.tagService.createTag(createTag);
     }
 
-    @Get('tag/:id')
+    @Get(':id')
     async getTagByID(@Param('id') tagID: string) {
-        return this.tagService.getTagByID(Number(tagID));
+        return this.tagService.getTagByID(tagID);
     }
 
-    @Delete('tag/:id')
+    @Delete(':id')
     async deleteTagByID(@Param('id') tagID: string) {
-        return this.tagService.deleteTagByID(Number(tagID));
+        return this.tagService.deleteTagByID(tagID);
     }
 
-    @Put('tag/:id')
+    @Put(':id')
     async updateTagByID(
         @Param('id') tagID: string,
         @Body() updateTagBody: UpdateTagDto
     ) {
-        return this.tagService.updateTagByID(Number(tagID), updateTagBody);
+        return this.tagService.updateTagByID(tagID, updateTagBody);
     }
 
-    @Get('tags')
+    @Get()
     async getTagsByFilter(@Query() tagFilter: GetTagByFilterDto) {
         return this.tagService.fetchTagByFilter(tagFilter);
     }

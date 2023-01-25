@@ -1,7 +1,5 @@
 import { IsArray, IsIn, IsNotEmpty, IsString } from "class-validator";
 
-const possibleConditions = ["regex", "includes", "in", "or"];
-
 export class TagConditionDto {
 
     @IsNotEmpty()
@@ -10,10 +8,9 @@ export class TagConditionDto {
 
     @IsNotEmpty()
     @IsString()
-    @IsIn(possibleConditions)
     key: string;
 
     @IsNotEmpty()
     @IsArray()
-    value: string[];
+    values: string[];
 }

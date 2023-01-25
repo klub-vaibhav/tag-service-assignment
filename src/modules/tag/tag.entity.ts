@@ -1,12 +1,16 @@
 
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, PrimaryColumn, UpdateDateColumn } from "typeorm";
 import { TagConditionDto } from "./tag.condition.dto";
 import { TagTypeEnum } from "./tag.enum";
+import { IsString, IsUUID } from "class-validator";
 
 @Entity()
 export class TagEntity {
-    @PrimaryGeneratedColumn()
-    public id: number;
+
+    @PrimaryColumn()
+    @IsUUID()
+    @IsString()
+    public id: string;
 
     @Column()
     public name: string;
@@ -58,5 +62,20 @@ export class TagEntity {
         nullable: true
     })
     public deletedAt: Date;
+
+    @Column({
+        default: 'User'
+    })
+    public createdBy: string;
+
+    @Column({
+        nullable: true
+    })
+    public updatedBy: string;
+
+    @Column({
+        nullable: true
+    })
+    public deletedBy: string;
 
 }

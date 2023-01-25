@@ -2,8 +2,9 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { TagEntity } from "./tag.entity";
 import { Repository } from "typeorm";
-import { CreateTagDto, GetTagByFilterDto, UpdateTagDto } from "./tag.dto";
 import {v4 as uuidv4} from 'uuid';
+import { CreateTagDto } from "./dto/create.tag.dto";
+import { UpdateTagDto } from "./dto/update.tag.dto";
 
 @Injectable()
 
@@ -15,7 +16,7 @@ export class TagService {
     ) {}
 
     generateKey(name: string): string {
-        return name.toLowerCase().split(" ").join("-") + "-" + uuidv4();
+        return name.toLowerCase().split(" ").join("-") + "-" + Math.random().toString(36).substr(2, 5);
     }
 
     async createTag(createTag: CreateTagDto): Promise<any> {
@@ -23,11 +24,12 @@ export class TagService {
         const keyId = this.generateKey(createTag.name);
 
         const createTagData: any = {
+            id          : uuidv4(),
             name        : createTag.name,
             type        : createTag.type,
             key         : keyId,
-            condition   : createTag.condition,
-            isStatic    : (!createTag?.condition?.length) ? true : false
+            condition   : createTag.conditions,
+            isStatic    : (!createTag?.conditions?.length) ? true : false
         }
         if(createTag?.resourceType?.length) {
             createTagData.isResource = true;
@@ -38,25 +40,27 @@ export class TagService {
         return this.tagRepository.save(newTag);
     }
 
-    async getTagByID(tagID: number): Promise<any> {
+    async getTagByID(tagID: string): Promise<any> {
         const tagDetails = await this.tagRepository.find({
             where: {
-                id: tagID
+                id       : tagID,
+                isDeleted: false
             }
         })
         return {...tagDetails[0]};
     }
 
-    async deleteTagByID(tagID: number): Promise<{
+    async deleteTagByID(tagID: string): Promise<{
         status: string,
         message: string
     }> {
         const deleteTagDetails = await this.tagRepository.update({
-            id: tagID,
+            id       : tagID,
             isDeleted: false
         }, {
             isDeleted: true,
-            deletedAt: new Date()
+            deletedAt: new Date(),
+            deletedBy: "User"
         });
 
         if(!deleteTagDetails.affected) throw new NotFoundException('Tag ID not found');
@@ -66,7 +70,7 @@ export class TagService {
         }
     }
 
-    async updateTagByID(tagID: number, updateTagBody: UpdateTagDto) {
+    async updateTagByID(tagID: string, updateTagBody: UpdateTagDto) {
         const updateTagData: any = {};
 
         if(updateTagBody?.resourceType?.length) {
@@ -76,8 +80,8 @@ export class TagService {
             updateTagData.resourceType = null;
         }
 
-        if(updateTagBody?.condition?.length) {
-            updateTagData.condition = updateTagBody.condition;
+        if(updateTagBody?.conditions?.length) {
+            updateTagData.condition = updateTagBody.conditions;
             updateTagData.isStatic = false;
         } else {
             updateTagData.condition = [];
@@ -89,17 +93,19 @@ export class TagService {
         }
 
         const updatedTagResult = await this.tagRepository.update({
-            id: tagID,
+            id       : tagID,
             isDeleted: false
         }, {
-           ...updateTagData 
+           ...updateTagData,
+           updatedBy: "User"
         })
 
         if(!updatedTagResult.affected) throw new NotFoundException('Tag not found');
 
         const updatedTag = await this.tagRepository.find({
             where: {
-                id: tagID
+                id       : tagID,
+                isDeleted: false
             }
         });
 
@@ -110,11 +116,16 @@ export class TagService {
 
         const filteredTagData = await this.tagRepository.find({
             where: {
-                ...tagFilter
+                ...tagFilter,
+                isDeleted: false
             }
         })
 
-        return [...filteredTagData]
+        return {
+            message: 'success',
+            length: filteredTagData.length,
+            data: [...filteredTagData]
+        }
     }
 
 }
