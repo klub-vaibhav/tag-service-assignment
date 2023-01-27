@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { TagEntity } from "./tag.entity";
 import { Repository } from "typeorm";
@@ -28,7 +28,7 @@ export class TagService {
             name        : createTag.name,
             type        : createTag.type,
             key         : keyId,
-            condition   : createTag.conditions,
+            conditions  : createTag.conditions,
             isStatic    : (!createTag?.conditions?.length) ? true : false
         }
         if(createTag?.resourceType?.length) {
@@ -36,8 +36,14 @@ export class TagService {
             createTagData.resourceType = createTag.resourceType;
         }
 
-        const newTag = this.tagRepository.create(createTagData);
-        return this.tagRepository.save(newTag);
+        let newTag;
+
+        try{
+            newTag = this.tagRepository.create(createTagData);
+            return this.tagRepository.save(newTag);
+        }catch(error) {
+            throw new BadRequestException("Error while creating new tag");
+        }
     }
 
     async getTagByID(tagID: string): Promise<any> {
@@ -81,10 +87,10 @@ export class TagService {
         }
 
         if(updateTagBody?.conditions?.length) {
-            updateTagData.condition = updateTagBody.conditions;
+            updateTagData.conditions = updateTagBody.conditions;
             updateTagData.isStatic = false;
         } else {
-            updateTagData.condition = [];
+            updateTagData.conditions = [];
             updateTagData.isStatic = true;
         }
 

@@ -26,7 +26,7 @@ export class TagEntity {
     public key: string;
 
     @Column('json', { default: [] })
-    public condition: TagConditionDto[];
+    public conditions: TagConditionDto[];
 
     @Column({
         nullable: true
